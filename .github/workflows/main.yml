@@ -1,0 +1,43 @@
+name: Build Plugin ZIP
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.1'
+        extensions: grpc, gmp
+        tools: composer
+
+    - name: Install Composer dependencies
+      run: composer install --no-dev --optimize-autoloader
+
+    - name: Create artifact directory
+      run: mkdir aura-sync-plugin
+
+    - name: Copy files to artifact directory
+      run: |
+        cp -r vendor aura-sync-plugin/
+        cp composer.json aura-sync-plugin/
+        cp aura-sync-plugin.php aura-sync-plugin/
+        # Add other files/folders if you create them later, e.g., js, config
+        if [ -d "js" ]; then cp -r js aura-sync-plugin/; fi
+        if [ -d "config" ]; then cp -r config aura-sync-plugin/; fi
+
+
+    - name: Archive production artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: aura-sync-plugin-zip
+        path: |
+          ./aura-sync-plugin
