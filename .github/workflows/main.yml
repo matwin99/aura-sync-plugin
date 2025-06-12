@@ -9,9 +9,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    # 1. Checks out your repository under $GITHUB_WORKSPACE, so your job can access it
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
+    # 2. Sets up PHP with the required extensions and Composer
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
@@ -19,25 +21,17 @@ jobs:
         extensions: grpc, gmp
         tools: composer
 
+    # 3. Installs all the dependencies from composer.json, creating the vendor folder
     - name: Install Composer dependencies
-      run: composer install --no-dev --optimize-autoloader
+      run: composer install --prefer-dist --no-progress --no-dev
 
-    - name: Create artifact directory
-      run: mkdir aura-sync-plugin
+    # 4. Creates a ZIP file containing all the necessary plugin files
+    - name: Create Plugin ZIP
+      run: zip -r aura-sync-plugin.zip . -x ".git/*" -x ".github/*"
 
-    - name: Copy files to artifact directory
-      run: |
-        cp -r vendor aura-sync-plugin/
-        cp composer.json aura-sync-plugin/
-        cp aura-sync-plugin.php aura-sync-plugin/
-        # Add other files/folders if you create them later, e.g., js, config
-        if [ -d "js" ]; then cp -r js aura-sync-plugin/; fi
-        if [ -d "config" ]; then cp -r config aura-sync-plugin/; fi
-
-
-    - name: Archive production artifacts
-      uses: actions/upload-artifact@v3
+    # 5. Uploads the created ZIP file so you can download it
+    - name: Upload Plugin ZIP as Artifact
+      uses: actions/upload-artifact@v4
       with:
-        name: aura-sync-plugin-zip
-        path: |
-          ./aura-sync-plugin
+        name: aura-sync-plugin
+        path: aura-sync-plugin.zip
